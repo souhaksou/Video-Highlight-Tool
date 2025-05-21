@@ -1,0 +1,20 @@
+body {
+  font-family: Arial, "微軟正黑體", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 1.5px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a,
+button {
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+}
