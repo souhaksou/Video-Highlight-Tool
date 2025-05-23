@@ -1,5 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+
+import UploadArea from '@/components/UploadAria.vue';
 
 </script>
 
@@ -7,13 +9,12 @@ import { ref } from 'vue'
   <section class="p:32 h:full min-h:100vh">
     <!-- container -->
     <div class="max-w:screen-lg mx:auto">
-      <h1 class="f:32 f:bold t:center mb:32">Video Highlight Tool</h1>
+      <h1 class="f:32 f:bold t:center mb:64">Video Highlight Tool</h1>
       <!-- <div class="grid-cols:2">
         <div>a</div>
         <div>b</div>
       </div> -->
-      <div class="">請上傳檔案
-      </div>
+      <UploadArea />
     </div>
   </section>
 </template>

@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { VideoPlayer } from '@videojs-player/vue'
 import 'video.js/dist/video-js.css'
 
-// 若是用本地影片，直接 import
 import testVideo from '@/assets/test.mp4'
 
 const playerOptions = ref({

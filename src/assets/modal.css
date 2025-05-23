@@ -1,0 +1,11 @@
+.modal-container {
+    padding: 16px !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    cursor: default !important;
+    max-height: 100vh !important;
+    z-index: 999;
+}
+
+.modal-container>div {
+    overflow-y: auto;
+}
