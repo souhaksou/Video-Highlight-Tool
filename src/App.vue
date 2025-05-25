@@ -9,5 +9,3 @@ const WidgetContainerModal = container;
   </div>
   <widget-container-modal />
 </template>
-
-<style scoped></style>

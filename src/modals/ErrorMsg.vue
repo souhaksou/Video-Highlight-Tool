@@ -7,7 +7,7 @@ const props = defineProps({
 
 const close = () => {
     popModal();
-}
+};
 </script>
 
 <template>

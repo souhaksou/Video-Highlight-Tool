@@ -12,13 +12,13 @@
     "@faker-js/faker": "^9.8.0",
     "@master/css": "^2.0.0-rc.68",
     "@master/css.vite": "^2.0.0-rc.68",
-    "@videojs-player/vue": "^1.0.0",
     "bootstrap-icons": "^1.13.1",
     "jenesius-vue-modal": "^1.11.9",
+    "overlayscrollbars-vue": "^0.5.9",
     "pinia": "^3.0.1",
-    "video.js": "^7.21.7",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "vue3-slider": "^1.10.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",

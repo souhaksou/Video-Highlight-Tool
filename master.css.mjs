@@ -3,7 +3,11 @@ export default {
     variables: {
         'primary': '#0D6EFD',
         'primary-bg': '#CFE2FF',
-        'primary-border': '#9EC5FE'
+        'primary-border': '#9EC5FE',
+        'secondary': '#595C5F',
+        'secondary-bg': '#E9ECEF',
+        'body': '#212529',
+        'suggested': '#FFC107',
     },
     // components: {
     //     btn: {
