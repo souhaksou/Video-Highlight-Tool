@@ -34,6 +34,10 @@ export const useVideoStore = defineStore('video', () => {
     _transcript.value = data;
   };
 
+  const setHighlighted = (index) => {
+    _transcript.value[index].highlighted = !_transcript.value[index].highlighted;
+  };
+
   const reset = () => {
     _videoFile.value = null;
     _duration.value = null;
@@ -49,6 +53,7 @@ export const useVideoStore = defineStore('video', () => {
     setVideoFile,
     setDuration,
     setTranscript,
+    setHighlighted,
     reset,
   };
 });

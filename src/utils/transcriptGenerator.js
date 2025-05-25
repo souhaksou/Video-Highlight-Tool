@@ -14,10 +14,14 @@ const generateSentences = (duration) => {
 
     for (let i = 0; i < n_sentences; i++) {
       const min = 1.0;
-      const max = Math.min(3.0, remaining - (n_sentences - i - 1) * (1.0 + 0.1));
+      let max = Math.min(3.0, remaining - (n_sentences - i - 1) * (1.0 + 0.1));
+      if (max < 1.0) {
+        max = 1.0; // ⚠️ 保底防錯，不讓 max 小於 min
+      }
       const dur = i === n_sentences - 1
         ? remaining
-        : faker.number.float({ min, max, precision: 0.1 });
+        : faker.number.float({ min: 1.0, max, precision: 0.1 });
+
       sentenceDurations.push(dur);
       remaining -= dur;
     }
