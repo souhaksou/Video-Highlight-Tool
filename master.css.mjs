@@ -7,7 +7,7 @@ export default {
         'secondary': '#595C5F',
         'secondary-bg': '#E9ECEF',
         'body': '#212529',
-        'suggested': '#FFC107',
+        'current': '#FFC107',
         'tertiary': '#909294'
     },
     // components: {

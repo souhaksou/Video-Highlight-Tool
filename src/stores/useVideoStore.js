@@ -21,6 +21,7 @@ export const useVideoStore = defineStore('video', () => {
     }
     return groups;
   });
+  const _currentIndex = ref(null);
 
   const setVideoFile = (file) => {
     _videoFile.value = file;
@@ -38,10 +39,15 @@ export const useVideoStore = defineStore('video', () => {
     _transcript.value[index].highlighted = !_transcript.value[index].highlighted;
   };
 
+  const setCurrentIndex = (index) => {
+    _currentIndex.value = index;
+  };
+
   const reset = () => {
     _videoFile.value = null;
     _duration.value = null;
     _transcript.value = [];
+    _currentIndex.value = null;
   };
 
   return {
@@ -50,10 +56,12 @@ export const useVideoStore = defineStore('video', () => {
     isUploaded: _isUploaded,
     transcript: readonly(_transcript),
     groups: _groups,
+    currentIndex: readonly(_currentIndex),
     setVideoFile,
     setDuration,
     setTranscript,
     setHighlighted,
+    setCurrentIndex,
     reset,
   };
 });

@@ -1,13 +1,13 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { openModal } from 'jenesius-vue-modal';
 import LoadingOverlay from '@/modals/LoadingOverlay.vue';
 import slider from 'vue3-slider';
 import { storeToRefs } from 'pinia';
 import { useVideoStore } from '@/stores/useVideoStore';
 const videoStore = useVideoStore();
-const { videoFile, duration } = videoStore;
-const { transcript } = storeToRefs(videoStore);
+const { videoFile, duration, setCurrentIndex, reset } = videoStore;
+const { transcript, currentIndex } = storeToRefs(videoStore);
 import { formatTime } from '@/utils/time';
 
 // 載入影片
@@ -35,10 +35,13 @@ const isPlaying = ref(false);
 // 播放狀態切換
 const togglePlay = () => {
   if (!videoRef.value) return;
+  // 👉 當 highlightMode 開啟 且 沒有區塊，不能播放
+  if (highlightMode.value && highlightedBlocks.value.length === 0) return; // ❌ 阻止播放
   // highlight 模式且已選擇區塊
   if (highlightMode.value && currentIndex.value !== null) {
-    const block = highlightedBlocks.value[currentIndex.value];
-    // 如果影片已到達或超過區塊結尾，重置到起點
+    // 🔵 使用 find 找 highlightedBlocks 裡 originalIndex 符合 currentIndex 的區塊
+    const block = highlightedBlocks.value.find(b => b.originalIndex === currentIndex.value);
+    if (!block) return;
     if (videoRef.value.currentTime >= block.end) {
       videoRef.value.currentTime = block.start;
     }
@@ -55,27 +58,60 @@ const onEnded = () => {
   isPlaying.value = false;
 };
 // 時間顯示
+const autoPlayNext = ref(true); // 預設為開啟
+const hasEndedBlock = ref(false); // 是否已經處理過這段結尾
 const currentTime = ref(0); // 滑桿位置，用於拖曳與播放進度
 const displayTime = ref(0); // 顯示時間，一秒更新一次
 let lastDisplaySec = -1;
 const FRAME_BUFFER = 0.05; // 可依實際影片幀率調整（30fps 約 0.033 秒）
 const onTimeUpdate = () => {
-  if (isSeeking.value) return; // 拖曳時不更新
   const now = videoRef.value?.currentTime ?? 0;
-  currentTime.value = now; // 每幀同步滑桿進度
+
+  // ✅ 基本時間更新邏輯：**不論 highlightMode 是否開啟都要執行**
+  currentTime.value = now;
   const sec = Math.floor(now);
   if (sec !== lastDisplaySec) {
-    displayTime.value = sec; // 每秒更新顯示
+    displayTime.value = sec;
     lastDisplaySec = sec;
   }
-  // highlight 模式到達結尾時暫停
-  if (highlightMode.value && currentIndex.value !== null) {
-    const block = highlightedBlocks.value[currentIndex.value];
-    if (now >= block.end - FRAME_BUFFER) {
-      videoRef.value.pause();
-      videoRef.value.currentTime = block.end; // 精準停在結尾
-      isPlaying.value = false;
+
+  // ❌ 拖曳中 或 未開啟 highlight 模式 或 無 currentIndex，不執行區塊邏輯
+  if (isSeeking.value || !highlightMode.value || currentIndex.value === null) return;
+
+  // ✅ 區塊播放邏輯
+  const block = highlightedBlocks.value.find(b => b.originalIndex === currentIndex.value);
+  if (!block) return;
+
+  if (now >= block.end - FRAME_BUFFER && !hasEndedBlock.value) {
+    hasEndedBlock.value = true;
+
+    if (autoPlayNext.value) {
+      const currentIdx = highlightedBlocks.value.findIndex(b => b.originalIndex === currentIndex.value);
+      const nextBlock = highlightedBlocks.value[currentIdx + 1];
+      if (nextBlock) {
+        setCurrentIndex(nextBlock.originalIndex);
+        nextTick(() => {
+          setTimeout(() => {
+            if (videoRef.value?.paused) {
+              videoRef.value.play();
+              isPlaying.value = true;
+            }
+          }, 100);
+        });
+        return;
+      }
     }
+
+    if (videoRef.value) {
+      videoRef.value.pause();
+      isPlaying.value = false;
+      videoRef.value.currentTime = block.end;
+      currentTime.value = block.end;
+    }
+  }
+
+  if (now < block.end - FRAME_BUFFER) {
+    hasEndedBlock.value = false;
   }
 };
 
@@ -101,36 +137,6 @@ const onSeekEnd = () => {
 };
 
 const highlightMode = ref(true);
-const currentIndex = ref(null);
-const onVideoLoaded = () => {
-  if (highlightedBlocks.value.length === 0) return;
-  jumpToBlock(0)
-};
-
-const previous = () => {
-  if (!highlightMode.value) return;
-  if (currentIndex.value > 0) {
-    jumpToBlock((currentIndex.value - 1));
-  }
-};
-const next = () => {
-  if (!highlightMode.value) return;
-  if (currentIndex.value < highlightedBlocks.value.length - 1) {
-    jumpToBlock((currentIndex.value + 1));
-  }
-};
-
-const jumpToBlock = (index) => {
-  currentIndex.value = index;
-  const block = highlightedBlocks.value[currentIndex.value];
-  videoRef.value.pause(); // 跳轉後保持暫停
-  isPlaying.value = false;
-  const startTime = block.start;
-  videoRef.value.currentTime = startTime;
-  currentTime.value = startTime;
-  displayTime.value = Math.floor(startTime);
-};
-
 const highlightedBlocks = computed(() => {
   const result = [];
   const transcriptList = transcript.value;
@@ -146,6 +152,110 @@ const highlightedBlocks = computed(() => {
   }
   return result;
 });
+const onVideoLoaded = () => {
+  if (highlightedBlocks.value.length === 0) return;
+  const firstOriginalIndex = highlightedBlocks.value[0].originalIndex;
+  setCurrentIndex(firstOriginalIndex);
+};
+
+const previous = () => {
+  if (!highlightMode.value) return;
+  // 🔵 找出目前 currentIndex（originalIndex）在 highlightedBlocks 的位置
+  const currentPos = highlightedBlocks.value.findIndex(b => b.originalIndex === currentIndex.value);
+  if (currentPos > 0) {
+    // 🔵 設定前一個區塊的 originalIndex
+    const prevBlock = highlightedBlocks.value[currentPos - 1];
+    setCurrentIndex(prevBlock.originalIndex);
+  }
+};
+const next = () => {
+  if (!highlightMode.value) return;
+  const currentPos = highlightedBlocks.value.findIndex(b => b.originalIndex === currentIndex.value);
+  if (currentPos !== -1 && currentPos < highlightedBlocks.value.length - 1) {
+    const nextBlock = highlightedBlocks.value[currentPos + 1];
+    setCurrentIndex(nextBlock.originalIndex);
+  }
+};
+
+// watch currentIndex 跳轉影片段落
+const resetVideoToStart = () => {
+  if (videoRef.value) {
+    videoRef.value.pause();
+    isPlaying.value = false;
+    videoRef.value.currentTime = 0;
+    currentTime.value = 0;
+    displayTime.value = 0;
+  }
+};
+
+watch(currentIndex, (newOriginalIndex) => {
+  if (!highlightMode.value) return;
+  hasEndedBlock.value = false;
+  // 1. 記錄跳段前是否正在播放
+  const wasPlayingBeforeJump = videoRef.value && !videoRef.value.paused;
+  if (newOriginalIndex === null) {
+    resetVideoToStart();
+    return;
+  }
+  const block = highlightedBlocks.value.find(b => b.originalIndex === newOriginalIndex);
+  if (!block) {
+    resetVideoToStart();
+    return;
+  }
+  if (!videoRef.value) return;
+  // 2. 跳段：先暫停、設時間
+  videoRef.value.pause();
+  isPlaying.value = false;
+  videoRef.value.currentTime = block.start;
+  currentTime.value = block.start;
+  displayTime.value = Math.floor(block.start);
+  // 3. 如果跳段前是播放中，就接著播放
+  if (wasPlayingBeforeJump) {
+    nextTick(() => {
+      videoRef.value.play();
+      isPlaying.value = true;
+    });
+  }
+});
+
+watch(highlightedBlocks, (newBlocks) => {
+  if (newBlocks.length === 0) {
+    // 所有都被取消，重設
+    setCurrentIndex(null);
+    return;
+  }
+  // 檢查目前 currentIndex 是否還存在於新的 highlightedBlocks 裡
+  const currentBlockStillExists = newBlocks.some(
+    block => block.originalIndex === currentIndex.value
+  );
+  if (!currentBlockStillExists) {
+    // 找出比 currentIndex 小的最後一個（往前找）
+    const previous = [...newBlocks]
+      .reverse()
+      .find(block => block.originalIndex < currentIndex.value);
+    if (previous) {
+      setCurrentIndex(previous.originalIndex);
+    } else {
+      // 沒有比它小的，就跳到第一個
+      setCurrentIndex(newBlocks[0].originalIndex);
+    }
+  }
+});
+
+watch(highlightMode, (enabled) => {
+  if (!enabled) return; // 關閉時不處理
+  // ✅ highlightMode 被打開，但 currentIndex 是 null → 停止播放、重設影片位置
+  if (currentIndex.value === null) {
+    if (videoRef.value) {
+      videoRef.value.pause();
+      isPlaying.value = false;
+      videoRef.value.currentTime = 0;
+      currentTime.value = 0;
+      displayTime.value = 0;
+    }
+  }
+});
+
 
 const getPositionPercentage = (start) => {
   return ((start / duration) * 100).toFixed(2);
@@ -164,7 +274,10 @@ const blockCss = (block) => {
 
 <template>
   <div class="p:16 bg:body">
-    <p class="f:20 f:bold fg:white mb:8">Preview</p>
+    <div class="flex jc:space-between ai:center mb:8">
+      <p class="f:20 f:bold fg:white">Preview</p>
+      <button @click="reset" class="inline-block p:4|8 r:4 f:14 fg:white bg:red">Reset</button>
+    </div>
     <div class="bg:black mb:16">
       <!-- video -->
       <div v-if="!videoUrl" class="aspect:16/9 w:full h:full max-h:600"></div>
@@ -178,11 +291,20 @@ const blockCss = (block) => {
           <button @click="previous"><i class="bi bi-skip-start-fill"></i></button>
           <div class="w:16"></div>
           <button @click="togglePlay">
-            <i v-show="!isPlaying" class="bi bi-play-fill"></i>
-            <i v-show="isPlaying" class="bi bi-pause-fill"></i>
+            <i :class="isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill'"></i>
           </button>
           <div class="w:16"></div>
           <button @click="next"><i class="bi bi-skip-end-fill"></i></button>
+          <div class="w:16"></div>
+          <button :disabled="!highlightMode" @click="autoPlayNext = !autoPlayNext">
+            <i :class="autoPlayNext ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
+            <span class="ml:4 f:12 translateY(-2px) inline-block">AutoNext</span>
+          </button>
+          <div class="w:16"></div>
+          <button @click="highlightMode = !highlightMode">
+            <i :class="highlightMode ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
+            <span class="ml:4 f:12 translateY(-2px) inline-block">HighlightMode</span>
+          </button>
         </div>
         <div class="fg:white f:14 flex ai:center user-select:none">
           <p> {{ `${formatTime(currentTime)}` }}</p>
@@ -197,8 +319,9 @@ const blockCss = (block) => {
         <slider v-model="currentTime" :disabled="highlightMode" :min="0" :max="duration" :color="'#374151'"
           :track-color="'#374151'" :tooltip="true" :formatTooltip="formatTime" :step="0.1" :height="20"
           @drag-start="onSeekStart" @drag-end="onSeekEnd" />
-        <div v-for="(block, index) in highlightedBlocks" :key="index" @click="jumpToBlock(index)"
-          class="h:20 r:2 bg:#3C82F6 abs top:0 z:10" :class="`${blockCss(block)}`" />
+        <div v-show="highlightMode" v-for="block in highlightedBlocks" :key="block.originalIndex"
+          @click="setCurrentIndex(block.originalIndex)" class="h:20 r:2 bg:#3C82F6 abs top:0 z:10"
+          :class="`${blockCss(block)}`" />
       </div>
     </div>
   </div>
