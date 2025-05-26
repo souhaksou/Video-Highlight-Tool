@@ -275,8 +275,8 @@ const blockCss = (block) => {
 <template>
   <div class="p:16 bg:body">
     <div class="flex jc:space-between ai:center mb:8">
-      <p class="f:20 f:bold fg:white">Preview</p>
-      <button @click="reset" class="inline-block p:4|8 r:4 f:14 fg:white bg:red">Reset</button>
+      <p class="f:16 f:20@xs f:bold fg:white">Preview</p>
+      <button @click="reset" class="inline-block p:4|8 r:4 f:12 f:14@xs fg:white bg:red">Reset</button>
     </div>
     <div class="bg:black mb:16">
       <!-- video -->

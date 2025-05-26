@@ -28,7 +28,7 @@ watch(currentIndex, async (idx) => {
 </script>
 
 <template>
-  <OverlayScrollbarsComponent class="h:full min-h:calc(100vh-176px) max-h:calc(100vh-176px) bg:secondary-bg">
+  <OverlayScrollbarsComponent class="h:full min-h:calc(100vh-64px) max-h:calc(100vh-64px) bg:secondary-bg">
     <div class="p:16">
       <p class="f:20 f:bold mb:16">Transcript</p>
       <div v-for="group in groups" :key="group.type" class="mb:24">

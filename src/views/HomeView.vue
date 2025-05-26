@@ -11,11 +11,11 @@ import TranscriptEditor from '@/components/TranscriptEditor.vue';
 </script>
 
 <template>
-  <section class="p:32 h:full min-h:100vh">
+  <section class="p:16 p:32@xs h:full min-h:100vh overflow-y:hidden">
     <div class="max-w:screen-lg mx:auto">
-      <h1 class="f:32 f:bold t:center mb:64">Video Highlight Tool</h1>
+      <h1 v-show="!isUploaded" class="f:32 f:bold t:center my:32 {mt:0;mb:64;}@xs">Video Highlight Tool</h1>
       <template v-if="isUploaded">
-        <div class="grid-cols:2">
+        <div class="grid-cols:1 grid-cols:2@xs">
           <TranscriptEditor />
           <VideoPlayer />
         </div>
