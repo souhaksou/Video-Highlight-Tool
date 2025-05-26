@@ -15,7 +15,6 @@ onMounted(() => {
 });
 
 const toggleHighlighted = (index) => {
-  return;
   setHighlighted(index);
 };
 </script>

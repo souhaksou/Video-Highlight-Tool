@@ -35,6 +35,14 @@ const isPlaying = ref(false);
 // 播放狀態切換
 const togglePlay = () => {
   if (!videoRef.value) return;
+  // highlight 模式且已選擇區塊
+  if (highlightMode.value && currentIndex.value !== null) {
+    const block = highlightedBlocks.value[currentIndex.value];
+    // 如果影片已到達或超過區塊結尾，重置到起點
+    if (videoRef.value.currentTime >= block.end) {
+      videoRef.value.currentTime = block.start;
+    }
+  }
   if (videoRef.value.paused) {
     videoRef.value.play();
     isPlaying.value = true;
@@ -50,6 +58,7 @@ const onEnded = () => {
 const currentTime = ref(0); // 滑桿位置，用於拖曳與播放進度
 const displayTime = ref(0); // 顯示時間，一秒更新一次
 let lastDisplaySec = -1;
+const FRAME_BUFFER = 0.05; // 可依實際影片幀率調整（30fps 約 0.033 秒）
 const onTimeUpdate = () => {
   if (isSeeking.value) return; // 拖曳時不更新
   const now = videoRef.value?.currentTime ?? 0;
@@ -58,6 +67,15 @@ const onTimeUpdate = () => {
   if (sec !== lastDisplaySec) {
     displayTime.value = sec; // 每秒更新顯示
     lastDisplaySec = sec;
+  }
+  // highlight 模式到達結尾時暫停
+  if (highlightMode.value && currentIndex.value !== null) {
+    const block = highlightedBlocks.value[currentIndex.value];
+    if (now >= block.end - FRAME_BUFFER) {
+      videoRef.value.pause();
+      videoRef.value.currentTime = block.end; // 精準停在結尾
+      isPlaying.value = false;
+    }
   }
 };
 
@@ -105,6 +123,8 @@ const next = () => {
 const jumpToBlock = (index) => {
   currentIndex.value = index;
   const block = highlightedBlocks.value[currentIndex.value];
+  videoRef.value.pause(); // 跳轉後保持暫停
+  isPlaying.value = false;
   const startTime = block.start;
   videoRef.value.currentTime = startTime;
   currentTime.value = startTime;
@@ -112,9 +132,21 @@ const jumpToBlock = (index) => {
 };
 
 const highlightedBlocks = computed(() => {
-  return transcript.value.filter(item => item.highlighted)
-    .map(item => ({ start: item.start, end: item.end }));
+  const result = [];
+  const transcriptList = transcript.value;
+  for (let i = 0; i < transcriptList.length; i++) {
+    const item = transcriptList[i];
+    if (item.highlighted) {
+      result.push({
+        start: item.start,
+        end: item.end,
+        originalIndex: i
+      });
+    }
+  }
+  return result;
 });
+
 const getPositionPercentage = (start) => {
   return ((start / duration) * 100).toFixed(2);
 };
