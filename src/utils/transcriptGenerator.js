@@ -65,6 +65,17 @@ const generateSentences = (duration) => {
     flatSubtitles[idx].suggested = true;
     flatSubtitles[idx].highlighted = true;
   }
+  // 在 return 前加入檢查
+  const hasAnyMarked = flatSubtitles.some(
+    item => item.suggested || item.highlighted
+  );
+
+  if (!hasAnyMarked && flatSubtitles.length > 0) {
+    // 隨機選一個元素標記，比強制用第一個更合理
+    const fallbackIndex = faker.number.int({ min: 0, max: flatSubtitles.length - 1 });
+    flatSubtitles[fallbackIndex].suggested = true;
+    flatSubtitles[fallbackIndex].highlighted = true;
+  }
 
   return flatSubtitles;
 }

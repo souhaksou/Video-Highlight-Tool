@@ -8,6 +8,7 @@ export default {
         'secondary-bg': '#E9ECEF',
         'body': '#212529',
         'suggested': '#FFC107',
+        'tertiary': '#909294'
     },
     // components: {
     //     btn: {
