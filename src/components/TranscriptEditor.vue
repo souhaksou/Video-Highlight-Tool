@@ -3,7 +3,7 @@ import { ref, watch, nextTick, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useVideoStore } from '@/stores/useVideoStore';
 const videoStore = useVideoStore();
-const { setTranscript, setHighlighted, setCurrentIndex, duration } = videoStore;
+const { setTranscript, setHighlighted, setCurrentIndex, reset, duration } = videoStore;
 const { transcript, groups, currentIndex } = storeToRefs(videoStore);
 import { generateSentences } from '@/utils/transcriptGenerator';
 import { formatTime } from '@/utils/time';
@@ -31,7 +31,10 @@ watch(currentIndex, async (idx) => {
   <OverlayScrollbarsComponent
     class="h:full min-h:calc(50vh-16px) max-h:calc(50vh-16px) {min-h:calc(100vh-64px);max-h:calc(100vh-64px);}@xs bg:secondary-bg">
     <div class="p:16">
-      <p class="f:16 mb:8 f:bold {f:20;mb:16;}@xs">Transcript</p>
+      <div class="flex jc:space-between ai:center mb:8 mb:16@xs">
+        <p class="f:16 f:bold f:20@xs">Transcript</p>
+        <button @click="reset" class="inline-block p:4|8 r:4 f:12 f:14@xs fg:white bg:red">Reset</button>
+      </div>
       <div v-for="group in groups" :key="group.type" class="mb:16 mb:24@xs">
         <p class="f:14 f:16@xs f:bold mb:8">{{ group.type }}</p>
         <div v-for="index in group.index" :key="index" ref="items" @click="setHighlighted(index)"

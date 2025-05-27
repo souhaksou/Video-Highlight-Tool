@@ -6,7 +6,7 @@ import slider from 'vue3-slider';
 import { storeToRefs } from 'pinia';
 import { useVideoStore } from '@/stores/useVideoStore';
 const videoStore = useVideoStore();
-const { videoFile, duration, setCurrentIndex, reset } = videoStore;
+const { videoFile, duration, setCurrentIndex } = videoStore;
 const { transcript, currentIndex } = storeToRefs(videoStore);
 import { formatTime } from '@/utils/time';
 
@@ -282,11 +282,8 @@ const currentSubtitle = computed(() => {
 <template>
   <div
     class="p:16 bg:body h:full min-h:calc(50vh-16px) max-h:calc(50vh-16px) {min-h:calc(100vh-64px);max-h:calc(100vh-64px);}@xs">
-    <div class="flex jc:space-between ai:center mb:8">
-      <p class="f:16 f:20@xs f:bold fg:white">Preview</p>
-      <button @click="reset" class="inline-block p:4|8 r:4 f:12 f:14@xs fg:white bg:red">Reset</button>
-    </div>
-    <div class="bg:black mb:16">
+    <p class="f:20 f:bold fg:white hidden block@xs">Preview</p>
+    <div class="bg:black mb:4 mb:16@xs">
       <!-- video -->
       <div v-if="!videoUrl" class="aspect:16/9 w:full h:full max-h:600"></div>
       <div class="aspect:16/9 w:full max-h:600 overflow:hidden flex jc:center ai:center rel">
@@ -299,7 +296,7 @@ const currentSubtitle = computed(() => {
       </div>
       <!-- controls -->
       <div class="p:8 flex@xs jc:space-between ai:center">
-        <div class="flex jc:space-between ai:center {inline-block;p:4;fg:white;f:20;}>button">
+        <div class="flex jc:space-between ai:center {inline-block;p:2|4;fg:white;f:20;}>button {py:4;}>button@xs">
           <button @click="previous"><i class="bi bi-skip-start-fill"></i></button>
           <div class="w:16"></div>
           <button @click="togglePlay">
@@ -319,8 +316,8 @@ const currentSubtitle = computed(() => {
             <span class="f:12 translateY(-2px) inline-block">HighlightMode</span>
           </button>
         </div>
-        <div class="h:8"></div>
-        <div class="fg:white f:14 flex jc:end ai:center user-select:none">
+        <div class="h:4"></div>
+        <div class="fg:white f:12 f:14@xs flex jc:end ai:center user-select:none">
           <p> {{ `${formatTime(currentTime)}` }}</p>
           <p class="mx:4">/</p>
           <p> {{ `${formatTime(duration)}` }}</p>
@@ -328,7 +325,7 @@ const currentSubtitle = computed(() => {
       </div>
     </div>
     <!-- progress -->
-    <div class="p:8">
+    <div class="p:4|8 py:8@xs">
       <div class="rel">
         <slider v-model="currentTime" :disabled="highlightMode" :min="0" :max="duration" :color="'#374151'"
           :track-color="'#374151'" :tooltip="true" :formatTooltip="formatTime" :step="0.1" :height="20"
