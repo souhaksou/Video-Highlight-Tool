@@ -28,15 +28,16 @@ watch(currentIndex, async (idx) => {
 </script>
 
 <template>
-  <OverlayScrollbarsComponent class="h:full min-h:calc(100vh-64px) max-h:calc(100vh-64px) bg:secondary-bg">
+  <OverlayScrollbarsComponent
+    class="h:full min-h:calc(50vh-16px) max-h:calc(50vh-16px) {min-h:calc(100vh-64px);max-h:calc(100vh-64px);}@xs bg:secondary-bg">
     <div class="p:16">
-      <p class="f:20 f:bold mb:16">Transcript</p>
-      <div v-for="group in groups" :key="group.type" class="mb:24">
-        <p class="f:bold mb:8">{{ group.type }}</p>
+      <p class="f:16 mb:8 f:bold {f:20;mb:16;}@xs">Transcript</p>
+      <div v-for="group in groups" :key="group.type" class="mb:16 mb:24@xs">
+        <p class="f:14 f:16@xs f:bold mb:8">{{ group.type }}</p>
         <div v-for="index in group.index" :key="index" ref="items" @click="setHighlighted(index)"
-          class="f:14 p:8 mb:8 r:4 flex jc:start ai:start user-select:none cursor:pointer"
+          class="f:14 p:4|8 mb:8 r:4 {py:8;flex;}@xs jc:start ai:start user-select:none cursor:pointer"
           :class="`bg:${transcript[index].highlighted ? 'primary' : 'white'} b:2|solid|${index === currentIndex ? 'current' : 'white'}`">
-          <p @click.stop="jumpToBlock(index)" class="mr:8 f:bold cursor:pointer transition:200ms {fg:current;}:hover"
+          <p @click.stop="jumpToBlock(index)" class="mr:8@xs f:bold cursor:pointer transition:200ms {fg:current;}:hover"
             :class="`fg:${transcript[index].highlighted ? 'white' : 'primary'}`"> {{
               formatTime(transcript[index].start) }}</p>
           <p :class="`fg:${transcript[index].highlighted ? 'white' : 'black'}`">{{ transcript[index].text }}</p>

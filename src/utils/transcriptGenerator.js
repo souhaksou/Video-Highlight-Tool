@@ -129,16 +129,16 @@ function generateBlocksWithLabel(duration) {
   // 加上命名
   const len = blocks.length;
   if (len === 1) {
-    blocks[0].label = 'introduction';
+    blocks[0].label = 'Introduction';
   } else if (len === 2) {
-    blocks[0].label = 'introduction';
-    blocks[1].label = 'conclusion';
+    blocks[0].label = 'Introduction';
+    blocks[1].label = 'Conclusion';
   } else if (len >= 3) {
-    blocks[0].label = 'introduction';
+    blocks[0].label = 'Introduction';
     for (let i = 1; i < len - 1; i++) {
-      blocks[i].label = `dialog${i}`;
+      blocks[i].label = `Dialog${i}`;
     }
-    blocks[len - 1].label = 'conclusion';
+    blocks[len - 1].label = 'Conclusion';
   }
 
   if (blocks.length === 0 && duration >= 1) {
@@ -150,7 +150,7 @@ function generateBlocksWithLabel(duration) {
       start: parseFloat(fallbackStart.toFixed(2)),
       end: parseFloat(fallbackEnd.toFixed(2)),
       n_sentences: 1,
-      label: 'introduction'
+      label: 'Introduction'
     });
   }
 

@@ -243,19 +243,18 @@ watch(highlightedBlocks, (newBlocks) => {
 });
 
 watch(highlightMode, (enabled) => {
-  if (!enabled) return; // 關閉時不處理
-  // ✅ highlightMode 被打開，但 currentIndex 是 null → 停止播放、重設影片位置
-  if (currentIndex.value === null) {
-    if (videoRef.value) {
-      videoRef.value.pause();
-      isPlaying.value = false;
+  if (!videoRef.value) return;
+  if (enabled) {
+    // ✅ highlightMode 被打開時，要立即停止播放
+    videoRef.value.pause();
+    isPlaying.value = false;
+    if (currentIndex.value === null) {
       videoRef.value.currentTime = 0;
       currentTime.value = 0;
       displayTime.value = 0;
     }
   }
 });
-
 
 const getPositionPercentage = (start) => {
   return ((start / duration) * 100).toFixed(2);
@@ -270,10 +269,19 @@ const blockCss = (block) => {
   const width = getWidthPercentage(start, end);
   return `left:${left}% w:${width}%`;
 };
+
+const currentSubtitle = computed(() => {
+  let result = '';
+  if (currentIndex.value !== null && transcript.value[currentIndex.value]) {
+    result = transcript.value[currentIndex.value].text;
+  }
+  return result;
+});
 </script>
 
 <template>
-  <div class="p:16 bg:body">
+  <div
+    class="p:16 bg:body h:full min-h:calc(50vh-16px) max-h:calc(50vh-16px) {min-h:calc(100vh-64px);max-h:calc(100vh-64px);}@xs">
     <div class="flex jc:space-between ai:center mb:8">
       <p class="f:16 f:20@xs f:bold fg:white">Preview</p>
       <button @click="reset" class="inline-block p:4|8 r:4 f:12 f:14@xs fg:white bg:red">Reset</button>
@@ -281,12 +289,16 @@ const blockCss = (block) => {
     <div class="bg:black mb:16">
       <!-- video -->
       <div v-if="!videoUrl" class="aspect:16/9 w:full h:full max-h:600"></div>
-      <div class="aspect:16/9 w:full max-h:600 overflow:hidden flex jc:center ai:center">
+      <div class="aspect:16/9 w:full max-h:600 overflow:hidden flex jc:center ai:center rel">
         <video ref="videoRef" :src="videoUrl" @timeupdate="onTimeUpdate" @ended="onEnded"
           @loadedmetadata="onVideoLoaded" class="w:full h:full object-fit:contain r:4" />
+        <div v-show="highlightMode"
+          class="w:full abs bottom:4 left:0 f:14 fg:white t:center line-height:1.2 bottom:8@xs">
+          <span class="inline-block p:4 bg:rgb(0,0,0,0.3)">{{ currentSubtitle }}</span>
+        </div>
       </div>
       <!-- controls -->
-      <div class="p:8 flex jc:space-between ai:center">
+      <div class="p:8 flex@xs jc:space-between ai:center">
         <div class="flex jc:space-between ai:center {inline-block;p:4;fg:white;f:20;}>button">
           <button @click="previous"><i class="bi bi-skip-start-fill"></i></button>
           <div class="w:16"></div>
@@ -296,17 +308,19 @@ const blockCss = (block) => {
           <div class="w:16"></div>
           <button @click="next"><i class="bi bi-skip-end-fill"></i></button>
           <div class="w:16"></div>
-          <button :disabled="!highlightMode" @click="autoPlayNext = !autoPlayNext">
-            <i :class="autoPlayNext ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
-            <span class="ml:4 f:12 translateY(-2px) inline-block">AutoNext</span>
+          <button :disabled="!highlightMode" @click="autoPlayNext = !autoPlayNext"
+            :class="`fg:${autoPlayNext && highlightMode ? '' : 'gray!'}`">
+            <i class="mr:4 hidden inline@xs" :class="autoPlayNext ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
+            <span class="f:12 translateY(-2px) inline-block">AutoNext</span>
           </button>
           <div class="w:16"></div>
-          <button @click="highlightMode = !highlightMode">
-            <i :class="highlightMode ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
-            <span class="ml:4 f:12 translateY(-2px) inline-block">HighlightMode</span>
+          <button @click="highlightMode = !highlightMode" :class="`fg:${highlightMode ? '' : 'gray!'}`">
+            <i class="mr:4 hidden inline@xs" :class="highlightMode ? 'bi bi-toggle2-on' : 'bi-toggle2-off'"></i>
+            <span class="f:12 translateY(-2px) inline-block">HighlightMode</span>
           </button>
         </div>
-        <div class="fg:white f:14 flex ai:center user-select:none">
+        <div class="h:8"></div>
+        <div class="fg:white f:14 flex jc:end ai:center user-select:none">
           <p> {{ `${formatTime(currentTime)}` }}</p>
           <p class="mx:4">/</p>
           <p> {{ `${formatTime(duration)}` }}</p>
