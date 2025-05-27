@@ -1,6 +1,6 @@
 # 🎬 Video Highlight Tool
 
-一個以 Vue 3 打造的 AI 輔助影片剪輯 DEMO 工具，模擬文字轉影片轉錄流程，使用者可選擇重點句子、自動生成 Highlight Clip，並即時預覽剪輯成果。此專案為應徵 GliaCloud Frontend Engineer 職位所開發的作業作品。
+一個以 Vue 3 打造的 AI 輔助影片剪輯 DEMO 工具，模擬文字轉影片轉錄流程，使用者可選擇重點句子、自動生成 Highlight Clip，並即時預覽剪輯成果。
 
 ## 🚀 Demo（線上體驗）
 
