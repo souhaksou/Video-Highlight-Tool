@@ -20,7 +20,7 @@
 
 ### 💡 額外強化
 - 🎚️ 使用 `vue3-slider` 實作自訂 highlight timeline
-- 🧪 自製 transcript mock API（延遲模擬、資料完整）
+- 🧪 自製 transcript 模擬資料
 - 🖋️ 精簡 UI，搭配 Master CSS 與 Bootstrap Icons
 - 📦 模組化程式架構與 Pinia 狀態管理
 
